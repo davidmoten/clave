@@ -7,10 +7,7 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -18,25 +15,30 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.github.davidmoten.guavamini.Preconditions;
+
+@WebServlet(name = "Login", urlPatterns = "login")
 public class LoginServlet extends HttpServlet {
 
     private static final long serialVersionUID = -4082495983860831417L;
 
-    private final Map<String, CipherKey> userCipherKeys = new ConcurrentHashMap<String, CipherKey>();
-
-    private static final long ROOT_EXPIRY_MS = TimeUnit.DAYS.toMillis(1);
+    private final Data data = Data.instance();
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         String username = req.getParameter("username");
         String password = req.getParameter("password");
-        CipherKey cipherKey = userCipherKeys.compute(username, (name, c) -> computeRoot(name, c));
-        computeToken(username, cipherKey);
+        Preconditions.checkNotNull(username, "username cannot be null");
+        Preconditions.checkNotNull(password, "password cannot be null");
+        CipherKey cipherKey = data.getCipherKey(username);
+        String token = computeToken(username, cipherKey);
+        resp.getWriter().write(token);
     }
 
     private static String computeToken(String username, CipherKey cipherKey) {
@@ -52,29 +54,6 @@ public class LoginServlet extends HttpServlet {
                 | IllegalBlockSizeException | BadPaddingException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private static CipherKey computeRoot(String name, CipherKey c) {
-        if (c == null || c.expiryTime < System.currentTimeMillis()) {
-            return new CipherKey(nextValue(), System.currentTimeMillis() + ROOT_EXPIRY_MS);
-        } else {
-            return c;
-        }
-    }
-
-    private static byte[] nextValue() {
-        return UUID.randomUUID().toString().replace("-", "").getBytes(StandardCharsets.UTF_8);
-    }
-
-    private static final class CipherKey {
-        final byte[] value;
-        final long expiryTime;
-
-        CipherKey(byte[] value, long expiryTime) {
-            this.value = value;
-            this.expiryTime = expiryTime;
-        }
-
     }
 
     public static void main(String[] args) throws NoSuchAlgorithmException, NoSuchPaddingException,
