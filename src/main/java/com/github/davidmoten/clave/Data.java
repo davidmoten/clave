@@ -2,6 +2,7 @@ package com.github.davidmoten.clave;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -26,8 +27,12 @@ public class Data {
 
     private final Map<String, CipherKey> userCipherKeys = new ConcurrentHashMap<String, CipherKey>();
 
-    public CipherKey getCipherKey(String username) {
+    public CipherKey getOrComputeCipherKey(String username) {
         return userCipherKeys.compute(username, (name, c) -> computeRoot(name, c));
+    }
+    
+    public Optional<CipherKey> getCipherKey(String username) {
+        return Optional.of(userCipherKeys.get(username));
     }
 
     private static CipherKey computeRoot(String name, CipherKey c) {
@@ -47,10 +52,6 @@ public class Data {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-        // UUID u = UUID.randomUUID();
-        // ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
-        // bb.putLong(u.getMostSignificantBits());
-        // bb.putLong(u.getLeastSignificantBits());
-        // return bb.array();
     }
+
 }

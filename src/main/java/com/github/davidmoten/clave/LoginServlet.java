@@ -36,24 +36,9 @@ public class LoginServlet extends HttpServlet {
         String password = req.getParameter("password");
         Preconditions.checkNotNull(username, "username cannot be null");
         Preconditions.checkNotNull(password, "password cannot be null");
-        CipherKey cipherKey = data.getCipherKey(username);
-        String token = computeToken(username, cipherKey);
+        CipherKey cipherKey = data.getOrComputeCipherKey(username);
+        String token = Tokens.computeToken(username, cipherKey);
         resp.getWriter().write(token);
-    }
-
-    private static String computeToken(String username, CipherKey cipherKey) {
-        try {
-            Key aesKey = new SecretKeySpec(cipherKey.value, "AES");
-            System.out.println("cipherKey.value size=" + cipherKey.value.length);
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-            String info = username + "\t" + cipherKey.expiryTime;
-            byte[] encrypted = cipher.doFinal(info.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(encrypted);
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
-                | IllegalBlockSizeException | BadPaddingException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     public static void main(String[] args) throws NoSuchAlgorithmException, NoSuchPaddingException,
@@ -64,7 +49,7 @@ public class LoginServlet extends HttpServlet {
         bb.putLong(u.getLeastSignificantBits());
         byte[] value = bb.array();
         CipherKey c = new CipherKey(value, System.currentTimeMillis());
-        String token = computeToken("fred", c);
+        String token = Tokens.computeToken("fred", c);
         byte[] bytes = Base64.getDecoder().decode(token);
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         Key aesKey = new SecretKeySpec(value, "AES");
