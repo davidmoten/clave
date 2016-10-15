@@ -16,13 +16,14 @@ import javax.crypto.spec.SecretKeySpec;
 public final class Tokens {
 
 	private static final String CIPHER_TRANSFORMATION = "AES/ECB/PKCS5Padding";
+	private static final String SECRET_KEY_ALGORITHM = "AES";
 	private static final String TOKEN_DELIMITER = "\t";
 	//TODO justify selection of salt length
 	private static final int SALT_LENGTH = 16;
 
 	static String createToken(String username, byte[] cipherKey, Clock clock) {
 		try {
-			Key aesKey = new SecretKeySpec(cipherKey, "AES");
+			Key aesKey = new SecretKeySpec(cipherKey, SECRET_KEY_ALGORITHM);
 			Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
 			cipher.init(Cipher.ENCRYPT_MODE, aesKey);
 			String info = username + TOKEN_DELIMITER + clock.now()
@@ -40,7 +41,7 @@ public final class Tokens {
 		try {
 			byte[] tokenBytes = Base64.getDecoder().decode(token);
 			Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-			Key aesKey = new SecretKeySpec(cipherKey, "AES");
+			Key aesKey = new SecretKeySpec(cipherKey, SECRET_KEY_ALGORITHM);
 			cipher.init(Cipher.DECRYPT_MODE, aesKey);
 			decoded = cipher.doFinal(tokenBytes);
 		} catch (IllegalBlockSizeException | BadPaddingException | InvalidKeyException | NoSuchAlgorithmException
