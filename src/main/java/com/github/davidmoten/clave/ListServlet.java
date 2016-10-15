@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.github.davidmoten.clave.Tokens.Info;
 import com.github.davidmoten.guavamini.Preconditions;
 
 @WebServlet(name = "List", urlPatterns = "list")
@@ -20,8 +21,8 @@ public class ListServlet extends HttpServlet {
             throws ServletException, IOException {
         String token = req.getParameter("token");
         Preconditions.checkNotNull(token, "token parameter must not be null");
-        Tokens.parseToken(token, Data.instance().cipherKey());
-        resp.getWriter().write("return list here as JSON");
+        Info info = Tokens.parseToken(token, Data.instance().cipherKey());
+        resp.getWriter().write("return list for " + info.username + " here as JSON");
     }
 
 }
