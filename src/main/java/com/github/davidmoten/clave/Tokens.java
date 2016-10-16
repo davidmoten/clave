@@ -13,7 +13,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
-public final class Tokens {
+final class Tokens {
 
 	private static final String CIPHER_TRANSFORMATION = "AES/ECB/PKCS5Padding";
 	private static final String SECRET_KEY_ALGORITHM = "AES";
