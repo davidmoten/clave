@@ -18,15 +18,15 @@ final class Tokens {
 	private static final String CIPHER_TRANSFORMATION = "AES/ECB/PKCS5Padding";
 	private static final String SECRET_KEY_ALGORITHM = "AES";
 	private static final String TOKEN_DELIMITER = "\t";
-	//TODO justify selection of salt length
+	// TODO justify selection of salt length
 	private static final int SALT_LENGTH = 16;
 
-	static String createToken(String username, byte[] cipherKey, Clock clock) {
+	static String createToken(String username, String password, byte[] cipherKey, Clock clock) {
 		try {
 			Key aesKey = new SecretKeySpec(cipherKey, SECRET_KEY_ALGORITHM);
 			Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
 			cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-			String info = username + TOKEN_DELIMITER + clock.now()
+			String info = username + TOKEN_DELIMITER + password + TOKEN_DELIMITER + clock.now()
 					+ UUID.randomUUID().toString().substring(0, SALT_LENGTH);
 			byte[] encrypted = cipher.doFinal(info.getBytes(StandardCharsets.UTF_8));
 			return Base64.getEncoder().encodeToString(encrypted);
@@ -50,15 +50,17 @@ final class Tokens {
 		}
 		String s = new String(decoded, StandardCharsets.UTF_8);
 		String[] items = s.substring(0, s.length() - SALT_LENGTH).split(TOKEN_DELIMITER);
-		return new Info(items[0], Long.parseLong(items[1]));
+		return new Info(items[0], items[1], Long.parseLong(items[2]));
 	}
 
 	static final class Info {
 		final String username;
+		final String password;
 		final long createTime;
 
-		public Info(String username, long createTime) {
+		public Info(String username, String password, long createTime) {
 			this.username = username;
+			this.password = password;
 			this.createTime = createTime;
 		}
 
@@ -72,7 +74,7 @@ final class Tokens {
 		}
 	};
 
-	public static String createToken(String username, byte[] cipherKey) {
-		return createToken(username, cipherKey, DEFAULT_CLOCK);
+	public static String createToken(String username, String password, byte[] cipherKey) {
+		return createToken(username, password, cipherKey, DEFAULT_CLOCK);
 	}
 }

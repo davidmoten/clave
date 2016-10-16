@@ -25,7 +25,7 @@ public class LoginServlet extends HttpServlet {
         
         
         byte[] cipherKey = Data.instance().cipherKey();
-        String token = Tokens.createToken(username, cipherKey);
+        String token = Tokens.createToken(username, password, cipherKey);
         resp.getWriter().write(token);
     }
 
