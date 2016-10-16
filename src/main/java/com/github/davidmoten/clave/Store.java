@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.github.davidmoten.clave.Tokens.Info;
+
 public final class Store {
 
 	private static final Store instance = new Store();
@@ -12,9 +14,14 @@ public final class Store {
 	private static final int SALT_LENGTH = 20;
 
 	private final Map<String, HashAndSalt> values = new ConcurrentHashMap<String, HashAndSalt>();
+	private final CipherKey cipherKey = new CipherKey();
 
 	public static Store instance() {
 		return instance;
+	}
+	
+	public byte[] cipherKey() {
+		return cipherKey.value();
 	}
 
 	public void createAccount(String username, String password) {
@@ -47,6 +54,12 @@ public final class Store {
 		byte[] salt = new byte[SALT_LENGTH];
 		random.nextBytes(salt);
 		return salt;
+	}
+
+	public String getPassword(String token, String key) {
+		Info info = Tokens.parseToken(token, cipherKey.value());
+		//TODO
+        return "";	
 	}
 
 }

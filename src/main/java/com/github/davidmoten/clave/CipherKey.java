@@ -5,28 +5,19 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
-public final class Data {
-
-    private static final Data instance = new Data();
+public final class CipherKey {
 
     private static final String AES = "AES";
     private static final int AES_KEY_BITS = 128;// multiple of 8
-
-    public static Data instance() {
-        return instance;
-    }
-
-
 	private final byte[] aesKey;
 
-    private Data() {
+    CipherKey() {
     	this.aesKey = createAesKey();
     }
     
-    public byte[] cipherKey() {
+    public byte[] value() {
     	return aesKey;
     }
-
 
     private static byte[] createAesKey() {
         try {
