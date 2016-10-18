@@ -41,7 +41,7 @@ public final class Store {
 		    }
 		}
 	}
-
+	
 	private  byte[] createSalt () {
 		SecureRandom random = new SecureRandom();
 		byte[] salt = new byte[SALT_LENGTH];
