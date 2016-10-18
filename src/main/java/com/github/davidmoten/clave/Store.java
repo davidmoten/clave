@@ -72,7 +72,7 @@ public final class Store {
         return salt;
     }
 
-    public String getPassword(String token, String key, long timeoutMs, Clock clock) {
+    public String getPassword(String token, String passwordId, long timeoutMs, Clock clock) {
         Info info = Tokens.parseToken(token, cipherKey.value());
         if (info.createTime < clock.now() - timeoutMs) {
             throw new SessionTimeoutException();
@@ -80,16 +80,19 @@ public final class Store {
             try {
                 // TODO use InputStream instead for efficiency
                 byte[] bytes = getEncryptedArchive(info.username);
-                SecretKeySpec sks = new SecretKeySpec(
-                        info.password.getBytes(StandardCharsets.UTF_8), AES);
+                byte[] salt = getPasswordSalt(info.username);
+                byte[] key = concatenate(info.password.getBytes(StandardCharsets.UTF_8), salt);
+                SecretKeySpec sks = new SecretKeySpec(key, AES);
                 Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
                 cipher.init(Cipher.DECRYPT_MODE, sks);
                 byte[] bytes2 = cipher.doFinal(bytes);
                 InputStream is = new ByteArrayInputStream(bytes2, 0, bytes2.length - SALT_LENGTH);
-                // first entry is index
+                // first entry is xml index with
+                // id, name, username, url, passwordId, passwordSalt, notes,
+                // tags, attachments (name, bytes)
                 // following entries are salt then encrypted bytes pairs
                 byte[] passwordBytes = Bytes.unzip(is) //
-                        .first(entry -> entry.getName().equals(key)) //
+                        .first(entry -> entry.getName().equals(passwordId)) //
                         .flatMap(entry -> Bytes.from(entry.getInputStream())) //
                         .to(Bytes.collect()) //
                         .toBlocking().single();
@@ -99,6 +102,19 @@ public final class Store {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private static byte[] concatenate(byte[] a, byte[] b) {
+        int aLen = a.length;
+        int bLen = b.length;
+        byte[] c = new byte[aLen + bLen];
+        System.arraycopy(a, 0, c, 0, aLen);
+        System.arraycopy(b, 0, c, aLen, bLen);
+        return c;
+    }
+
+    private byte[] getPasswordSalt(String username) {
+        return "salt".getBytes(StandardCharsets.UTF_8);
     }
 
     private byte[] getEncryptedArchiveSalt(String username) {
