@@ -9,6 +9,11 @@
     <description>Password manager</description>
     <dependencies>
         <dependency>
+            <groupId>com.github.davidmoten</groupId>
+            <artifactId>rxjava-extras</artifactId>
+            <version>0.7.9.23</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>

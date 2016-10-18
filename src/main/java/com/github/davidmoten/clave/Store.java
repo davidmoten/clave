@@ -1,5 +1,7 @@
 package com.github.davidmoten.clave;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -15,6 +17,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.github.davidmoten.clave.Tokens.Info;
+import com.github.davidmoten.rx.Bytes;
 
 public final class Store {
 
@@ -82,7 +85,15 @@ public final class Store {
                 Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
                 cipher.init(Cipher.DECRYPT_MODE, sks);
                 byte[] bytes2 = cipher.doFinal(bytes);
-                return new String(bytes2, 0, bytes2.length - SALT_LENGTH, StandardCharsets.UTF_8);
+                InputStream is = new ByteArrayInputStream(bytes2, 0, bytes2.length - SALT_LENGTH);
+                // first entry is index
+                // following entries are salt then encrypted bytes pairs
+                byte[] passwordBytes = Bytes.unzip(is) //
+                        .first(entry -> entry.getName().equals(key)) //
+                        .flatMap(entry -> Bytes.from(entry.getInputStream())) //
+                        .to(Bytes.collect()) //
+                        .toBlocking().single();
+                return "boo";
             } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
                     | IllegalBlockSizeException | BadPaddingException e) {
                 throw new RuntimeException(e);
