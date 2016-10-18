@@ -18,17 +18,17 @@ public class TokensTest {
 				return 12345;
 			}
 		};
-		String token = Tokens.createToken("fred","password", Data.instance().cipherKey(), clock);
+		String token = Tokens.createToken("fred","password", Store.instance().cipherKey(), clock);
 		System.out.println(token);
-		Info info = Tokens.parseToken(token, Data.instance().cipherKey());
+		Info info = Tokens.parseToken(token, Store.instance().cipherKey());
 		assertEquals("fred", info.username);
 		assertEquals("password", info.password);
 		assertEquals(12345, info.createTime);
 
 		// use same info for token input but token will be different because of
 		// salt
-		String token2 = Tokens.createToken("fred", "password", Data.instance().cipherKey(), clock);
-		Info info2 = Tokens.parseToken(token, Data.instance().cipherKey());
+		String token2 = Tokens.createToken("fred", "password", Store.instance().cipherKey(), clock);
+		Info info2 = Tokens.parseToken(token, Store.instance().cipherKey());
 		assertEquals("fred", info2.username);
 		assertEquals("password", info2.password);
 		assertEquals(12345, info2.createTime);

@@ -24,7 +24,7 @@ public class LoginServlet extends HttpServlet {
         Preconditions.checkNotNull(password, "password cannot be null");
         
         
-        byte[] cipherKey = Data.instance().cipherKey();
+        byte[] cipherKey = Store.instance().cipherKey();
         String token = Tokens.createToken(username, password, cipherKey);
         resp.getWriter().write(token);
     }
