@@ -1,13 +1,26 @@
 package com.github.davidmoten.clave;
 
+import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+
 import com.github.davidmoten.clave.Tokens.Info;
 
 public final class Store {
+
+    private static final String AES_TRANSFORMATION = "AES/CBC/PKCS5Padding";
+
+    private static final String AES = "AES";
 
     private static final Store instance = new Store();
 
@@ -61,9 +74,30 @@ public final class Store {
         if (info.createTime < clock.now() - timeoutMs) {
             throw new SessionTimeoutException();
         } else {
-            // TODO
-            return "boo";
+            try {
+                // TODO use InputStream instead for efficiency
+                byte[] bytes = getEncryptedArchive(info.username);
+                SecretKeySpec sks = new SecretKeySpec(
+                        info.password.getBytes(StandardCharsets.UTF_8), AES);
+                Cipher cipher = Cipher.getInstance(AES_TRANSFORMATION);
+                cipher.init(Cipher.DECRYPT_MODE, sks);
+                byte[] bytes2 = cipher.doFinal(bytes);
+                return new String(bytes2, 0, bytes2.length - SALT_LENGTH, StandardCharsets.UTF_8);
+            } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException
+                    | IllegalBlockSizeException | BadPaddingException e) {
+                throw new RuntimeException(e);
+            }
         }
+    }
+
+    private byte[] getEncryptedArchiveSalt(String username) {
+        // TODO
+        return "salt".getBytes(StandardCharsets.UTF_8);
+    }
+
+    private byte[] getEncryptedArchive(String username) {
+        // TODO
+        return "boo".getBytes();
     }
 
 }
